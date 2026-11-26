@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Krishi Voice</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef7ee;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .container {
+            background: white;
+            max-width: 500px;
+            margin: auto;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 3px 12px #cccccc;
+        }
+
+        h1 {
+            color: #247a36;
+        }
+
+        select, textarea, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        textarea {
+            height: 100px;
+        }
+
+        button {
+            background: #24843b;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #17652b;
+        }
+
+        #answer {
+            background: #eef7ee;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🌱 Krishi Voice</h1>
+
+    <p>Your Smart Farming Assistant</p>
+
+    <label for="language">Choose Language:</label>
+
+    <select id="language">
+        <option value="te-IN">Telugu</option>
+        <option value="hi-IN">Hindi</option>
+        <option value="en-IN">English</option>
+    </select>
+
+    <h3>Ask Your Farming Question</h3>
+
+    <textarea id="question"
+        placeholder="Type your farming question here...">
+    </textarea>
+
+    <button onclick="startListening()">
+        🎤 Speak Your Question
+    </button>
+
+    <button onclick="getAnswer()">
+        Get Answer
+    </button>
+
+    <div id="answer">
+        <h3>Farming Assistant Answer</h3>
+        <p>Your answer will appear here.</p>
+    </div>
+
+    <button onclick="speakAnswer()">
+        🔊 Listen to Answer
+    </button>
+
+</div>
+
+<script>
+
+    // Voice recognition setup
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    let recognition;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+    }
+
+    function startListening() {
+
+        if (!recognition) {
+            alert("Please use Google Chrome or Microsoft Edge.");
+            return;
+        }
+
+        const language =
+            document.getElementById("language").value;
+
+        recognition.lang = language;
+
+        recognition.onresult = function(event) {
+
+            const spokenText =
+                event.results[0][0].transcript;
+
+            document.getElementById("question").value =
+                spokenText;
+        };
+
+        recognition.onerror = function(event) {
+            alert("Voice recognition error: " + event.error);
+        };
+
+        recognition.start();
+    }
+
+    // Demo answer function
+    function getAnswer() {
+
+        async function getAnswer() {
+
+    const question =
+        document.getElementById("question").value.trim();
+
+    const languageCode =
+        document.getElementById("language").value;
+
+    if (!question) {
+        alert("Please enter your question.");
+        return;
+    }
+
+    const languageNames = {
+        "te-IN": "Telugu",
+        "hi-IN": "Hindi",
+        "en-IN": "English"
+    };
+
+    const answerBox =
+        document.getElementById("answer");
+
+    answerBox.innerText = "Getting farming guidance...";
+
+    try {
+
+        const response = await fetch(
+            "http://localhost:3000/ask",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    question: question,
+                    language: languageNames[languageCode]
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Request failed");
+        }
+
+        answerBox.innerHTML = "";
+
+        const heading = document.createElement("h3");
+        heading.textContent = "Farming Assistant Answer";
+
+        const paragraph = document.createElement("p");
+        paragraph.textContent = data.answer;
+
+        answerBox.appendChild(heading);
+        answerBox.appendChild(paragraph);
+
+    } catch (error) { 
+
+        answerBox.innerText =
+            "Unable to connect to AI. Please check your server.";
+
+        console.error(error);
+    }
+}
+
+    }
+
+    // Read answer aloud
+    function speakAnswer() {
+
+        const answer =
+            document.getElementById("answer").innerText;
+
+        const language =
+            document.getElementById("language").value;
+
+        const speech = new SpeechSynthesisUtterance(answer);
+
+        speech.lang = language;
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(speech);
+    }
+
+</script>
+
+</body>
+</html>
